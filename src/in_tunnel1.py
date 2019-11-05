@@ -2,7 +2,7 @@
 import rospy
 import numpy
 from sensor_msgs.msg import LaserScan
-from tester.msg import raw_sensor_8_10
+from foscar_turtlebot3_autorace.msg import raw_sensor_8_10
 from std_msgs.msg import Int8
 import copy
 
@@ -20,7 +20,7 @@ global data2
 global copy_data
 global stage
 
-stage=0
+stage=3
 raw = raw_sensor_8_10()
 data2 = [0,0,0,0,0]
 copy_data = [0,0,0,0,0]
@@ -30,10 +30,10 @@ count = 0
 ####  Accept Lidar values and process the values (main)  ###############################################################################
 ######################################################################################################################################## 
 
-def checking_stage(ss): ### Function that save the stage value from 'main'
-	global stage
-	stage=ss.data
-	stage=3
+# def checking_stage(ss): ### Function that save the stage value from 'main'
+# 	global stage
+# 	stage=ss.data
+# 	stage=3
 
 
 def callback(data):
@@ -124,7 +124,7 @@ def find_same(data1):
 
 def scan_sensor():
 	rospy.Subscriber('/scan', LaserScan, callback)   
-	rospy.Subscriber('/stage',Int8,checking_stage)
+	# rospy.Subscriber('/stage',Int8,checking_stage)
 	rospy.spin()			  
 	
 if __name__ == '__main__':

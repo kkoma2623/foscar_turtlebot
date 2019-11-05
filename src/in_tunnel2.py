@@ -3,10 +3,12 @@ import rospy
 import numpy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
-from tester.msg import raw_sensor_8_10
+from foscar_turtlebot3_autorace.msg import raw_sensor_8_10
 from std_msgs.msg import Int8
+from sensor_msgs.msg import LaserScan
 
-import sys, select, termios, tty
+
+import sys, select, termios, tty, os
 import copy
 from math import atan
 from math import asin
@@ -30,7 +32,10 @@ global past_number
 
 global bool_way
 global stage
-
+##
+global start
+start = 0
+##
 first = 0
 bool_way = [0,0]
 
@@ -47,7 +52,7 @@ flag =0
 flag2 =0
 Flag = 0
 check = 0
-stage = 0
+stage = 3
 
 
 
@@ -56,7 +61,7 @@ stage = 0
 ########################################################################################################################################
 
 pub = rospy.Publisher('/cmd_vel', Twist, queue_size = 5)
-rospy.init_node('vel', anonymous=True)
+rospy.init_node('vel')#, anonymous=True)
 rate = rospy.Rate(10)
 twist = Twist()
 
@@ -94,6 +99,7 @@ def callback1(data):
 	global first
 	global dot
 
+	global start
 	rospy.on_shutdown(myhook)
 	Lidar = data.data
 	Lidar2 = data.sharp
@@ -107,6 +113,11 @@ def callback1(data):
 	print(dot)
 	print(count)
 	if stage == 3 and first ==1:
+		if start == 0 :
+			callback4()
+			start += 1
+		else :
+			pass
 		remind_past()	
 		if count == 1:
 			
@@ -222,11 +233,11 @@ def scan_wall2(data):
 	if temp <= 0.20 and number <= 3:
 		bool_way[0] = 1				# the smallest value means the wall's postion 
 		bool_way[1] = 3				# Return the direction the turtlebot have to go to avoid the wall
-		#rospy.loginfo('Right')		
+		rospy.loginfo('Right')		
 	elif temp <= 0.23 and number > 3:
 		bool_way[0] = 1
 		bool_way[1] = 1
-		#rospy.loginfo('Left')
+		rospy.loginfo('Left')
 	
 
 def store_pose():
@@ -384,7 +395,7 @@ def callback3(data):
 	
 		# Calculate the degree turtlebot have to turn and head depend on exit's direction
 
-		angle_goal = math.degrees(atan((2-local_pose[1])/(2+local_pose[0])))
+		angle_goal = math.degrees(atan((1.6-local_pose[1])/(2+local_pose[0])))
 	else:
 		flag=0
 		past = [[0,0]]
@@ -393,6 +404,8 @@ def callback3(data):
 		past_number = [0]
 		frist = 0
 		dot = [0,0]
+
+	print('angle_goal :', angle_goal)
 ########################################################################################################################################
 
 
@@ -431,15 +444,17 @@ def callback4():
 			twist.angular.z = orient
 			pub.publish(twist)
 
-def checking_stage(data):
-	global stage
-	stage= data.data
-	#stage=3
+# def checking_stage(data):
+# 	global stage
+# 	stage= data.data
+# 	#stage=3
+
 
 def listen():
-	rospy.Subscriber('/stage', Int8, checking_stage)
+	# rospy.Subscriber('/stage', Int8, checking_stage)
 	rospy.Subscriber('/odom', Odometry, callback3)
 	rospy.Subscriber('/raw_sensor', raw_sensor_8_10, callback1)
+	#rospy.Subscriber('/scan', LaserScan, callback5, queue_size=1)
 	rospy.spin()
 
 

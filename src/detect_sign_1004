@@ -21,21 +21,21 @@ import os
 
 class detect_sign:
 		def __init__(self):
-				rospy.sleep(rospy.Duration(8))
 				#print('init')
+				rospy.sleep(rospy.Duration(1))
 				self.trafficSign = Enum('trafficSign', 'left right dontgo construction stop parking tunnel')
 				self.pub = rospy.Publisher('/detect/traffic_sign', UInt8, queue_size=1)
 				self.bridge = CvBridge()
-				self.HSL_RED_LOWER = np.array([0, 50, 50])
-				self.HSL_RED_UPPER = np.array([10, 255, 255])
-				self.HSL_RED_LOWER1 = np.array([173, 50, 50])
-				self.HSL_RED_UPPER1 = np.array([180, 255, 255])
+				self.HSL_RED_LOWER = np.array([0, 50, 80])
+				self.HSL_RED_UPPER = np.array([10, 210, 215])
+				self.HSL_RED_LOWER1 = np.array([170, 50, 80])
+				self.HSL_RED_UPPER1 = np.array([180, 210, 158])
 
 				self.HSL_YELLOW_LOWER = np.array([10, 77, 84])
 				self.HSL_YELLOW_UPPER = np.array([28, 255, 255])
 
-				self.HSL_BLUE_LOWER = np.array([100, 62, 110])
-				self.HSL_BLUE_UPPER = np.array([139, 255, 255])
+				self.HSL_BLUE_LOWER = np.array([100, 60, 50])
+				self.HSL_BLUE_UPPER = np.array([115, 255, 180])
 				
 
 				self.stop_mode = False
@@ -189,7 +189,7 @@ class detect_sign:
 							x, y, w, h = cv2.boundingRect(cnt_1)
 							rate = float(float(h) / float(w))
 							# print w, h
-							if 60 < w < 100 and 60 < h < 100 and rate < 1.2:
+							if 60 < w < 100 and 60 < h < 100 and 0.8 < rate < 1.2:
 								# print rate, h, w
 								cv2.rectangle(roi_img, (x, y), (x+w, y+h), (250, 152, 50), 2)
 								inputImage = gray[y:y+h, x:x+w]
@@ -226,7 +226,6 @@ class detect_sign:
 									self.construction_count += 1
 									#print(pred.title())
 									#print(self.construction_count)
-									print 'construction'
 									if self.construction_count > 5 :
 										traffic_sign_msg = self.trafficSign.construction.value
 										self.pub.publish(traffic_sign_msg)
@@ -261,7 +260,7 @@ class detect_sign:
 							x, y, w, h = cv2.boundingRect(cnt_2)
 							rate = float(float(h) / float(w))
 							# print w, h
-							if 60 < w < 100 and 60 < h < 100 and rate < 1.1:
+							if 60 < w < 100 and 60 < h < 100 and 0.8 < rate < 1.1:
 								# print rate, h, w
 								cv2.rectangle(roi_img, (x, y), (x+w, y+h), (250, 152, 50), 2)
 								inputImage = gray[y:y+h, x:x+w]

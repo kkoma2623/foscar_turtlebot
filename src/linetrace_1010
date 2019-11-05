@@ -116,7 +116,7 @@ class line_traceee:
 				print 'Read left'
 				self.is_mode = True
 				self.is_leftsign = True
-				self.angular = 28 * np.pi/180
+				self.angular = 30 * np.pi/180
 				self.start = True
 				self.is_parking_sign = False
 			elif mode_msg.data == 2:											##		right
@@ -161,6 +161,7 @@ class line_traceee:
 			if mode_msg.data == 4:# and self.start == True:
 				print 'Read Construction'
 				# self.is_mode = True
+				self.angular = 0
 				self.is_construction = True
 				self.is_leftsign = False
 				self.is_rightsign = False
@@ -186,7 +187,7 @@ class line_traceee:
 			print msg.ranges[330]
 			ragnes = msg.ranges[30:45]
 			for i in ragnes:
-				if i < 0.2:
+				if i < 0.3:
 					self.stop_flag = True
 			if self.stop_flag == True :#0 < msg.ranges[330] < 0.6 :
 				# print 'sighnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn'
@@ -200,17 +201,21 @@ class line_traceee:
 		if self.is_construction:
 			self.is_leftsign = False
 			self.is_rightsign = False	
+			print msg.ranges[90]
 			if msg.ranges[90] < 0.3 and msg.ranges[90] != 0:
+				print 'construction'
 				self.is_construction = False
 				self.is_obstacle = True
 	
 		if self.is_obstacle:
-			# print 'Construction Mode'
+			print 'Construction Mode'
+			print 'aaaaa', self.phase, msg.ranges[90]
+			# cons_left = msg[89 : 92]
 			if self.phase == 1:
 				# print 'Phase 1' , self.status
 				if self.status == 0:
 					self.speed = 0.1
-					if msg.ranges[90] < 0.5 and msg.ranges[90] != 0:
+					if msg.ranges[90] < 0.3 and msg.ranges[90] != 0 :
 						self.status = 1
 					else:
 						self.angular = 0
@@ -223,18 +228,21 @@ class line_traceee:
 		
 			elif self.phase == 2:
 				# print 'Phase 2'
+				# print '0 :',msg.ranges[0], '90 :', msg.ranges[90]
 				self.angular = -0.4
-				if msg.ranges[0] < 0.6 and msg.ranges[0] != 0:
+				if msg.ranges[0] < 0.5 and msg.ranges[0] != 0:
 					self.check += 1
 				#print self.check
-				if self.check != 0 and msg.ranges[85] < 0.6 and msg.ranges[85] != 0:
-					print msg.ranges[85]
+				if self.check != 0 and msg.ranges[70] < 0.5 and msg.ranges[70] != 0:
 					self.phase += 1
 		
 			elif self.phase == 3:
+				# self.is_mode = False
+				# self.is_obstacle = False
 				# print 'Phase 3'
-				self.angular = 0.38
-				if msg.ranges[170] < 0.6 and msg.ranges[170] != 0 :
+				self.speed = 0.12
+				self.angular = 0.36
+				if msg.ranges[200] < 0.5 and msg.ranges[200] != 0 :
 					self.phase += 1
 		
 			elif self.phase == 4:
@@ -256,7 +264,9 @@ class line_traceee:
 			if self.parking_phase == 1:# '''phase 1은 양쪽이 다 노란색인 경우'''
 				if self.found_turtlebot == False:#'''터틀봇 찾을때까지'''
 					for i in check_left:#'''왼쪽에 잇다'''
+						# print check_left
 						if 0 < i < 0.6:
+							print '왼쪽에 있다.'
 							self.is_left_turtlebot = True
 							self.is_right_turtlebot = False
 							break
@@ -271,13 +281,14 @@ class line_traceee:
 						self.parking_phase += 1
 						break
 
-		if self.stopchk == True and (0 < msg.ranges[270] < 0.2) and self.is_tunnel == False and self.is_left == False and self.is_right == False:
+		if self.stopchk == True and (0 < msg.ranges[270] < 0.2) and self.is_tunnel == False and self.is_left == False and self.is_right == False and (0 <msg.ranges[290] < 0.5):
 			self.is_tunnel = True
 			speed = 0 
 			angular = 0
 			self.move(speed,angular)
 			os.system('roslaunch foscar_turtlebot3_autorace tunnel.launch')
-			# os.system('rosnode kill /line_trace')
+			os.system('rosnode kill /detect_signs')
+			os.system('rosnode kill /line_trace')
 
 	def myhook(self):               # If Ctrl + c occured, the node ends by myhook function and turtlebot's velocity returns to 0.
 		twist = Twist()
@@ -308,10 +319,10 @@ class line_traceee:
 				else:
 					pass
 			
-				error = self.center - 320
+				error = self.center - 327
 
-				Kp = 0.010
-				Kd = 0.005
+				Kp = 0.012
+				Kd = 0.004
 
 				angular_z = Kp * error + Kd * (error - self.lastError)
 				self.lastError = error
@@ -323,19 +334,19 @@ class line_traceee:
 					self.center = (self.left_pos + self.right_pos) // 2
 
 				elif self.is_left == True and self.is_right == False:
-					self.center = self.left_pos + 273
+					self.center = self.left_pos + 287
 
 				elif self.is_left == False and self.is_right == True:
-					self.center = self.right_pos - 273
+					self.center = self.right_pos - 289
 				elif self.is_left == False and self.is_right == False:#'''양쪽라인 다 노랑색이 아닌경우 직진함#'''
-					self.center = 320
+					self.center = 327
 				else:
 					pass
 				
-				error = self.center - 320
+				error = self.center - 327
 
-				Kp = 0.010
-				Kd = 0.005
+				Kp = 0.012
+				Kd = 0.004
 
 				angular_z = Kp * error + Kd * (error - self.lastError)
 				self.lastError = error
@@ -398,7 +409,7 @@ class line_traceee:
 				self.is_mode = False
 				self.is_parking = False			
 
-			print self.parking_phase
+			# print self.parking_phase
 			self.move(speed, angular)#'''모든 스피트와 각도는 여기서 퍼블리싱함'''
 
 		elif self.is_obstacle:
@@ -417,9 +428,9 @@ class line_traceee:
 		else:	 																					#############  line trace   ##############
 			# print'line tracing'
 			# print 'left line : ',self.is_left
-			# print 'right line : ',self.is_right
+			print 'right line : ',self.is_right
 			#print self.is_left, self.is_right
-			center = self.center
+			# center = self.center
 			if self.is_stop and self.stopchk ==  False:																	###########		stop bar	############
 				angular = 0
 				speed = 0
@@ -442,42 +453,49 @@ class line_traceee:
 
 				elif self.is_left == True and self.is_right == False:
 					if self.is_rightsign:
-						self.center = 430
+						self.center = 420
 					else:
-						self.center = self.left_pos + 273 #320
+						self.center = self.left_pos + 287 #40
 
 				elif self.is_left == False and self.is_right == True:
 					if self.is_leftsign:
 						self.center = 200
 					else:
-						self.center = self.right_pos - 273 #320
+						print 'elseeeeeeeeeeee'
+						self.center = self.right_pos - 289 #616
 				else:
 					pass
 				
-				error = self.center - 320
+				error = self.center - 327
 
-				Kp = 0.012#0.0050 #0.0025
-				Kd = 0.005#0.0018#0.014 #0.007
+				Kp = 0.016#0.0050 #0.0025
+				Kd = 0.006#0.0018#0.014 #0.007
 
 				angular_z = Kp * error + Kd * (error - self.lastError)
-				cv2.circle(cv_image, center, 5,(255,0,0),3,-1)
 				print 'angular_z : ', angular_z
 				print 'center : ',  self.center
 				self.lastError = error
 				speed = min(self.MAX_VEL * ((1 - abs(error) / 320) ** 2.2), 0.2)
 				angular = -max(angular_z, -2.0) if angular_z < 0 else -min(angular_z, 2.0)
+				
 			angular = round(angular, 3)
 			speed = round(speed, 3)
 			self.move(speed, angular)
 			# print speed,angular , self.center
-
+		#self.rate.sleep()
+		self.is_left = False
+		self.is_right = False
 
 	def line_trace(self, frame):
 		##print('line_trace')
 		frame = cv2.resize(frame, (640, 360), interpolation=cv2.INTER_AREA)
 		ROI = frame[335:355, :]
 		self.get_line(ROI)
+		cv2.circle(frame, (int(self.center),355), 5,(0,0,255),3,-1)
+		cv2.circle(frame, (int(self.right_pos),355), 5,(255,0,0),3,-1)
+		cv2.circle(frame, (int(self.left_pos),355), 5,(0,255,0),3,-1)
 		cv2.imshow('aa', frame)
+		
 		self.out2.write(frame)
 		cv2.waitKey(1)
 
@@ -490,7 +508,8 @@ class line_traceee:
 		else:
 			yellow_binary = cv2.inRange(hsl, self.HSL_YELLOW_LOWER, self.HSL_YELLOW_UPPER)
 			white_binary = cv2.inRange(hsl, self.HSL_WHITE_LOWER, self.HSL_WHITE_UPPER)
-		cv2.imshow('wb', white_binary)
+		concat_binary = cv2.hconcat([yellow_binary, white_binary])
+		cv2.imshow('concat_binary', concat_binary)
 		gray_img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		gaussianB = cv2.GaussianBlur(gray_img, (5,5), 0)
 		canny = cv2.Canny(gaussianB, 50 , 150)
@@ -516,37 +535,39 @@ class line_traceee:
 					# cv2.imshow('yb', yellow_binary)
 					# cv2.imshow('de', detect_area)
 					if nonzero > 30 :
+						# print nonzero
+						# self.left_pos = x1
 						left_arr.append(x1)
 			
 
-				elif x1 > 320 and self.is_right == False:
+				elif x2 > 320 and self.is_right == False:
+					
 					# print x1,y1,x2,y2
 					# #print 'right degree', degree
-					detect_area = white_binary[5 : 15, x1 : x1+20]
+					detect_area = white_binary[5 : 15, x2: x2+20]
 					nonzero = cv2.countNonZero(detect_area)
-					# print 'r_x1', x1, nonzero
+					# print 'r_x2', x2, nonzero
 					if nonzero > 30:
-						right_arr.append(x1)
+						# self.right_pos = x1
+						right_arr.append(x2)
 					
 				else:
 					continue
 				
+			# print self.left_pos, self.right_pos
 			if len(left_arr) > 0 :
 				self.is_left = True
 				self.left_pos = left_arr[0]
-				if len(left_arr) > 1:
-					self.left_pos = np.mean(left_arr[len(left_arr)//5 : (4 * len(left_arr)//5)])
-			else:
-				self.is_left = False
+				# if len(left_arr) > 1:
+				# 	self.left_pos = np.mean(left_arr[len(left_arr)//5 : (4 * len(left_arr)//5)])
 
 			if len(right_arr) > 0 :
 				# print 'bbbbbbbbbbbbbbbbbb'
 				self.is_right = True
 				self.right_pos = right_arr[0]
-				if len(right_arr) > 1:
-					self.right_pos = np.mean(right_arr[len(right_arr)//5 : (4 * len(right_arr)//5)])
-			else:
-				self.is_right = False
+				# if len(right_arr) > 1:
+				# 	self.right_pos = np.mean(right_arr[len(right_arr)//5 : (4 * len(right_arr)//5)])
+
 
 	
 	def move(self, speed, angle):
@@ -567,7 +588,6 @@ if __name__ == '__main__':
 	rospy.init_node('line_trace')#, anonymous=True)
 	node = line_traceee()
 	node.main()
-
 
 
 

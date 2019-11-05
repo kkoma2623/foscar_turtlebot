@@ -1,1 +1,0 @@
-T trffic sign

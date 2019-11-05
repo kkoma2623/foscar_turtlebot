@@ -66,7 +66,7 @@ class detectTrafficLight:
 				self.green_cnt += 1
 				if self.green_cnt > 10 :
 					#os.system('roslaunch foscar_turtlebot3_autorace line.launch')
-					os.system('rosrun foscar_turtlebot detect_sign_1004')
+					os.system('rosrun foscar_turtlebot3_autorace detect_sign_1004')
 					# os.system('rosrun foscar_turtlebot3_autorace detect_sign')
 					os.system('rosnode kill /traffic_light_sign')
 									
